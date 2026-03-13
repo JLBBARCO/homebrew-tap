@@ -1,30 +1,30 @@
 # homebrew-tap
 
-Sistema central para gerar instaladores macOS (.pkg) para:
+Central system to generate macOS (.pkg) installers for:
 
 - jlbbarco/passwords-manager
 - jlbbarco/auto-install-programs
 
-## O que foi adicionado
+## What was added
 
-- Workflow reutilizavel: .github/workflows/reusable-macos-installer.yml
-- Script de empacotamento PKG: scripts/create-macos-pkg.sh
-- Templates de integracao:
+- Reusable workflow: .github/workflows/reusable-macos-installer.yml
+- PKG packaging script: scripts/create-macos-pkg.sh
+- Integration templates:
   - templates/passwords-manager-macos-installer.yml
   - templates/auto-install-programs-macos-installer.yml
 
-## Como usar em cada repositorio
+## How to use in each repository
 
-1. Copie o template correspondente para `.github/workflows/macos-installer.yml` no repositorio de destino.
-2. Ajuste branch/tag de referencia do reusable workflow, se necessario:
+1. Copy the corresponding template to `.github/workflows/macos-installer.yml` in the target repository.
+2. Adjust the reusable workflow reference branch/tag if needed:
 
    uses: JLBBARCO/homebrew-tap/.github/workflows/reusable-macos-installer.yml@main
 
-3. Garanta que o build gera um `.app` no caminho informado em `app_path`.
-4. Publique uma tag `vX.Y.Z` ou execute via `workflow_dispatch`.
+3. Make sure the build generates a `.app` at the path defined in `app_path`.
+4. Publish a `vX.Y.Z` tag or run it via `workflow_dispatch`.
 
-## Resultado
+## Result
 
-Cada execucao gera um artefato `.pkg` pronto para download no GitHub Actions.
+Each run generates a `.pkg` artifact ready for download in GitHub Actions.
 
-Se quiser publicar automaticamente em Release, adicione uma etapa no workflow de cada projeto para anexar `${{ inputs.artifact_name }}` em `actions/create-release` ou `softprops/action-gh-release`.
+If you want to publish it automatically to a Release, add a step in each project workflow to attach `${{ inputs.artifact_name }}` using `actions/create-release` or `softprops/action-gh-release`.

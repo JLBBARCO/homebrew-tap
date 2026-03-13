@@ -1,0 +1,79 @@
+name: reusable-macos-installer
+
+on:
+    workflow_call:
+        inputs:
+            app_name:
+                description: Display name of the app
+                required: true
+                type: string
+            bundle_identifier:
+                description: macOS package identifier (e.g. com.example.app)
+                required: true
+                type: string
+            app_path:
+                description: Path to generated .app or executable after build
+                required: true
+                type: string
+            build_command:
+                description: Command that generates app_path
+                required: true
+                type: string
+            artifact_name:
+                description: Name of generated .pkg file
+                required: false
+                default: macos-installer.pkg
+                type: string
+            python_version:
+                description: Python version for build environments that require Python
+                required: false
+                default: "3.11"
+                type: string
+
+permissions:
+    contents: read
+
+jobs:
+    build-macos-installer:
+        runs-on: macos-latest
+
+        steps:
+            - name: Checkout source
+              uses: actions/checkout@v4
+
+            - name: Setup Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ inputs.python_version }}
+
+            - name: Build app
+              shell: bash
+              run: ${{ inputs.build_command }}
+
+            - name: Resolve package version
+              id: version
+              shell: bash
+              run: |
+                  VERSION="${GITHUB_REF_NAME}"
+                  VERSION="${VERSION#v}"
+                  if [ -z "${VERSION}" ] || [ "${VERSION}" = "main" ] || [ "${VERSION}" = "master" ]; then
+                    VERSION="0.0.${GITHUB_RUN_NUMBER}"
+                  fi
+                  echo "value=${VERSION}" >> "${GITHUB_OUTPUT}"
+
+            - name: Build PKG installer
+              shell: bash
+              run: |
+                  bash scripts/create-macos-pkg.sh \
+                    "${{ inputs.app_path }}" \
+                    "${{ inputs.app_name }}" \
+                    "${{ inputs.bundle_identifier }}" \
+                    "${{ steps.version.outputs.value }}" \
+                    "${{ inputs.artifact_name }}"
+
+            - name: Upload installer artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: macos-installer
+                  path: ${{ inputs.artifact_name }}
+                  if-no-files-found: error

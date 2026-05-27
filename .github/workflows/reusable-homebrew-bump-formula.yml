@@ -1,0 +1,60 @@
+name: reusable-homebrew-bump-formula
+
+on:
+    workflow_call:
+        inputs:
+            repository_name:
+                description: Repository that publishes the release asset, in OWNER/REPO format
+                required: true
+                type: string
+            tag_name:
+                description: Release tag to bump
+                required: true
+                type: string
+            release_asset_name:
+                description: Release asset name to hash
+                required: true
+                type: string
+            formula_name:
+                description: Homebrew formula name
+                required: true
+                type: string
+            formula_path:
+                description: Relative path to the formula in the tap repo
+                required: true
+                type: string
+            homebrew_tap:
+                description: Homebrew tap repository in OWNER/REPO format
+                required: true
+                type: string
+            base_branch:
+                description: Base branch of the tap repo
+                required: false
+                default: main
+                type: string
+
+permissions:
+    contents: read
+
+jobs:
+    bump-homebrew-formula:
+        runs-on: ubuntu-latest
+        steps:
+            - name: Compute download URL
+              id: release
+              shell: bash
+              run: |
+                  DOWNLOAD_URL="https://github.com/${{ inputs.repository_name }}/releases/download/${{ inputs.tag_name }}/${{ inputs.release_asset_name }}"
+                  echo "download_url=$DOWNLOAD_URL" >> "$GITHUB_OUTPUT"
+
+            - name: Bump Homebrew formula
+              uses: mislav/bump-homebrew-formula-action@v4
+              with:
+                  formula-name: ${{ inputs.formula_name }}
+                  formula-path: ${{ inputs.formula_path }}
+                  homebrew-tap: ${{ inputs.homebrew_tap }}
+                  base-branch: ${{ inputs.base_branch }}
+                  tag-name: ${{ inputs.tag_name }}
+                  download-url: ${{ steps.release.outputs.download_url }}
+              env:
+                  COMMITTER_TOKEN: ${{ secrets.COMMITTER_TOKEN }}
